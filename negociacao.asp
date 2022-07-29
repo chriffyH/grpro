@@ -175,28 +175,63 @@ Set conexao = Server.CreateObject("ADODB.Connection")
         </div>
         <div class="row wrapper border-bottom white-bg page-heading" style="display: flex;">
             <div class="col-lg-9">
-                <h2>Negociações</h2>
+                <h2><%=Application("nome_negociacoes")%></h2>
                 <ol class="breadcrumb">
                     <li>
                         <a href="default.asp">Home</a>
                     </li>
                     <li class="active">
-                        <strong>Gerenciamento de Negociações</strong>
+                        <strong>Gerenciamento de <%=Application("nome_negociacoes")%></strong>
                     </li>
                 </ol>
             </div>
-            <div class="col-lg-3" style="float: right; margin-top: 2%; ">
-                <h2></h2>
 
-                <div class="btn-group show" >
-                    <button data-toggle="dropdown"  class="btn btn-primary seta" aria-expanded="false" style="float: right;">Escolha o Funil</button>
-                    <ul class="dropdown-menu" x-placement="bottom-start" style="position: absolute; top: 32px; left: 0px; will-change: top, left; margin-left: 44%; ">
-                        <li><a class="dropdown-item" onclick="filtro_neg('nome')" >Nome / CPF - CNPJ</a></li>
+            <div class="col-lg-3" style="display: flex; margin-top: 2%; justify-content: flex-end; align-items: center;">
+
+                <!-- <div class="col-lg-1" style="margin-top: 4%;">
+                    <button onclick="pesquisa_lembretes()" class="label label-info" title="Lembretes" style="border: none; cursor: pointer; float: right; background-color: #f8ac59"><i class="fa fa-bell"></i></button>
+                </div> -->
+
+                <script type="text/javascript">
+                    var sensor_lembrete = false;
+
+                    function pesquisa_lembretes() 
+                    {
+                        if (sensor_lembrete == false)
+                        {
+                            sensor_lembrete = true;
+                        } 
+                        else 
+                        {
+                            sensor_lembrete = false;
+                        }
+
+                        let lista_cards = document.querySelectorAll(".lista_neg .info-element")
+
+                        for (var i = 0; i <= lista_cards.length; i++) 
+                        {
+                            if (lista_cards[i].classList.contains("lembrete-nao"))
+                            {
+                                if (sensor_lembrete == true) {
+                                    lista_cards[i].style.display = "none";          
+                                } else {
+                                    lista_cards[i].style.display = "block";
+                                }
+                            }
+                        }
+                    }
+                </script>
+
+                <div class="btn-group show">
+                    <button data-toggle="dropdown" class="btn btn-primary seta" aria-expanded="false" style="float: right;">Escolha o Funil</button>
+                    <ul class="dropdown-menu" x-placement="bottom-start" style="position: absolute; top: 32px; left: 0px; will-change: top, left; margin-left: -4%;">
+                        <li><a class="dropdown-item" onclick="filtro_neg('nome')">Nome / CPF - CNPJ</a></li>
                         <li><a class="dropdown-item" onclick="filtro_neg('estado')">Estado</a></li>
                         <li><a class="dropdown-item" onclick="filtro_neg('responsavel')">Responsável</a></li>
                         <li><a class="dropdown-item" onclick="filtro_neg('perfil')">Perfil</a></li>
                         <li><a class="dropdown-item" onclick="filtro_neg('interesse')">Interesse</a></li>
                         <li><a class="dropdown-item" onclick="filtro_neg('aquisicao')">Aquisição</a></li>
+                        <li><a class="dropdown-item" onclick="pesquisa_lembretes()">Lembrete</a></li>
                         <li class="dropdown-divider"></li>
                     </ul>
                 </div>
@@ -317,291 +352,303 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                             IF NOT rsetapas.EOF THEN 
                                 WHILE NOT rsetapas.EOF
                                     total_tamanho = total_tamanho + 324.5
-                                ' Pega mes e ano atual
-                                dat3 = date()
-                                mes = month(dat3)
-                                IF mes < 10 THEN
-                                    mes = 0&mes
-                                END IF
-                                dat3 = year(dat3)&"-"&mes
+                                    ' Pega mes e ano atual
+                                    dat3 = date()
+                                    mes = month(dat3)
+                                    IF mes < 10 THEN
+                                        mes = 0&mes
+                                    END IF
+                                    dat3 = year(dat3)&"-"&mes
 
-                                if rsetapas("conversao") = "Sim" or rsetapas("nao_conversao") = "Sim"  then
-                                    SET rstotal = conexao.execute("SELECT count(DISTINCT np.idnp) as total FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" and np.situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" AND month(data) = "&month(date)&" AND np.del = 0 AND year(data) = "&year(date)&" ORDER BY nf.idnf DESC LIMIT 10")
+                                    if rsetapas("conversao") = "Sim" or rsetapas("nao_conversao") = "Sim"  then
+                                        SET rstotal = conexao.execute("SELECT count(DISTINCT np.idnp) as total FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" and np.situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" AND month(data) = "&month(date)&" AND np.del = 0 AND year(data) = "&year(date)&" ORDER BY nf.idnf DESC LIMIT 10")
 
-                                    SET rstotaladesao = conexao.execute("SELECT SUM(DISTINCT valor_adesao) as totaladesao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" AND np.situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" AND month(data) = "&month(date)&" AND np.del = 0 AND year(data) = "&year(date)&" ORDER BY nf.idnf DESC")
-                                ELSE
+                                        SET rstotaladesao = conexao.execute("SELECT SUM(DISTINCT valor_adesao) as totaladesao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" AND np.situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" AND month(data) = "&month(date)&" AND np.del = 0 AND year(data) = "&year(date)&" ORDER BY nf.idnf DESC")
+                                    ELSE
 
-                                    SET rstotal = conexao.execute("SELECT Count(idnp) as total FROM neg_prospecter np WHERE "&visualizar_tipo&" AND np.del = 0 AND situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" LIMIT 10")
+                                        SET rstotal = conexao.execute("SELECT Count(idnp) as total FROM neg_prospecter np WHERE "&visualizar_tipo&" AND np.del = 0 AND situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto&" LIMIT 10")
 
-                                    SET rstotaladesao = conexao.execute("SELECT SUM(valor_adesao) as totaladesao FROM neg_prospecter np WHERE "&visualizar_tipo&" AND np.del = 0 AND situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto)
-                                end if
+                                        SET rstotaladesao = conexao.execute("SELECT SUM(valor_adesao) as totaladesao FROM neg_prospecter np WHERE "&visualizar_tipo&" AND np.del = 0 AND situacao = "&rsetapas("idnfe")&" AND "&usuario&" AND "&perfil&" AND "&aquisicao&" AND "&produto)
+                                    end if
 
 
-                                IF IsNull(rstotaladesao("totaladesao")) THEN 
-                                    totaladesao = "0,00"
-                                ELSE 
-                                    totaladesao = FormatNumber(rstotaladesao("totaladesao"))
-                                END IF 
+                                    IF IsNull(rstotaladesao("totaladesao")) THEN 
+                                        totaladesao = "0,00"
+                                    ELSE 
+                                        totaladesao = FormatNumber(rstotaladesao("totaladesao"))
+                                    END IF 
                         %>
 
-                        <div class="col-lg-3">
-                            <div class="ibox">
-                                <div class="ibox-content" style="height: 568px; background-color: #e8e8ea; padding: 0px 6px 20px 6px;">
-                                    
-                                    <div style="overflow: auto;"></div>
-
-                                    <%
-                                        etapas = pontinhos(rsetapas("etapa"), 25) 
-                                    %>
-                                    
-                                    <h3 style="margin-left: 3%; font-size: 17px; margin-bottom: 0;"><strong><%=etapas%></strong></h3> 
-
-                                    <span style="margin-left: 3%; " id="count<%=rsetapas("idnfe")%>"><%=rstotal("total")%></span>&nbsp; contatos
-
-                                    <label class="label label-success" style="background-color: #5cb85c; margin-top: 1%; margin-right: 3%; float: right; ">R$ <span id="count-adesao<%=rsetapas("idnfe")%>"><%=totaladesao%></span></label>
-
-                                    <span style="position: absolute;right: 13%;top: 7%;cursor: pointer;">
-                                        
-                                    </span>
-                                    <div style="clear:both"></div>
-                                
-                                    <%        
-                                        if rsetapas("conversao") = "Sim" or rsetapas("nao_conversao") = "Sim" then
-
-                                            SET rsnegoc = conexao.execute("SELECT DISTINCT np.idnp, np.empresa, np.responsavel, np.cidade, np.uf, data_validacao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" and np.situacao = "&rsetapas("idnfe")&" and "&usuario&" and "&perfil&" and "&aquisicao&" and "&produto&" AND np.del = 0 and month(data) = "&month(date)&" and year(data) = "&year(date)&" ORDER BY nf.idnf DESC limit 10")
-                                        ELSE
-                                            SET rsnegoc = conexao.execute("SELECT DISTINCT np.idnp, np.empresa, np.responsavel, np.cidade, np.uf, data_validacao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" AND np.del = 0 and np.situacao = "&rsetapas("idnfe")&" and "&usuario&" and "&perfil&" and "&aquisicao&" and "&produto&" ORDER BY nf.idnf DESC limit 10")
-                                        end if
-
-                                        SET rsid_entrada = conexao.execute("SELECT idnfe FROM neg_funil_etapas WHERE entrada = 'Sim'")
-
-
-                                        %>
-
-                                    <div class="barra" style="height: 500px; overflow: auto;overflow-x:hidden;">
-                                        <style type="text/css">
-
-                                            .info-element:hover .icones {
-                                                display: block !important;
-                                            }
-                                            
-                                        </style>
-                                        <div id="retorno_neg<%=rsetapas("idnfe")%>">
-
-                                            <ul style="" class="sortable-list connectList agile-list" id="etapa<%=rsetapas("idnfe")%>">
-
-                                                <%
-                                                    IF NOT rsnegoc.EOF THEN 
+                                    <div class="col-lg-3">
+                                        <div class="ibox">
+                                            <div class="ibox-content" style="height: 568px; background-color: #e8e8ea; padding: 0px 6px 20px 6px;">
                                                 
-                                                        WHILE NOT rsnegoc.EOF 
-                                                            habilita_acao = false
-                                                            IF Request.Cookies("grpro")("perm_103") = "1" THEN 
-                                                                habilita_acao = true
-                                                            ELSE
+                                                <div style="overflow: auto;"></div>
 
-                                                                SET verifica_participacao = conexao.execute("SELECT idprospecter FROM neg_prospecter_responsaveis where id_negp = "&rsnegoc("idnp")&" and id_usuario = "&Request.cookies("grpro")("idusuario")&" limit 1")
-
-                                                                IF NOT verifica_participacao.EOF THEN habilita_acao = true
-
-                                                            END IF
-                                                %>
-                                                    
-                                                            <li class="info-element" id="<%IF NOT habilita_acao THEN response.write("nao-")%><%=rsnegoc("idnp")%>" style="position: relative; padding: 3%; padding-bottom: 0px !important">  
-                                
-                                                                <%IF habilita_acao THEN%>
-                                                                    <div class="icones" style="text-align: center; position: absolute;  width: 100%; padding: 10px;display: block;bottom: 0px;z-index: -1; background-color: rgba(255, 255, 255, 0.7);">
-
-                                                                        <div style="width: 100%; margin-left: auto;text-align: right; display: flex;">
-                                                                            <i title="Adicionar Anotação" data-toggle="tooltip" data-placement="top" onclick="adicionar_anotacao(<%=rsnegoc("idnp")%>,'<%=rsnegoc("empresa")%> - <%=rsnegoc("responsavel")%>')" class="fas fa-folder-plus" style="font-size: 15px;color: #003366;cursor: pointer;margin-right: 3%;margin-left: auto !important;"></i><br>
-
-                                                                            <i title="Adicionar Agendamento" data-toggle="tooltip" data-placement="top" onclick="adicionar_agendamento(<%=rsnegoc("idnp")%>,'<%=rsnegoc("empresa")%> - <%=rsnegoc("responsavel")%>')" class="fas fa-calendar" style="font-size: 15px;color: #003366;cursor: pointer;margin-right: 3%"></i><br>
-
-                                                                            <i style="font-size: 15px; margin-right: 10px; color: #003366;cursor: pointer;" onclick="excluir(<%=rsnegoc("idnp")%>)" class="fa fa-trash pull-right" data-placement="top" title="Excluir" aria-hidden="true"></i><br><span class="sr-only"></span>
-                                                                        </div>
-                                                                    </div>
-                                                                <%END IF%>
-
-                                                                <div <%IF habilita_acao THEN%>onclick="window.open('neg_interacao_novo.asp?id=<%=rsnegoc("idnp")%>', '_blank') "<%END IF%>>
-                                                                    <div style="height: 22px">
-
-                                                                        <%
-                                                                            SET count_rsparticipantes = conexao.execute("SELECT COUNT(pr.idprospecter) as total FROM usuarios u  INNER JOIN neg_prospecter_responsaveis pr ON pr.id_usuario = u.idusuario WHERE pr.id_negp = "&rsnegoc("idnp")&" AND u.status = 'Ativo' ")
-                                                                            flag_part = false
-                                                                            IF CLNG(count_rsparticipantes("total")) > 3 THEN 
-                                                                                flag_part = true
-                                                                        %>
-
-                                                                                <div title="Demais responsáveis" class="tooltip-demo" style="width: 30px; height: 30px; position: relative; display: block; float: right; margin-right: 8px; text-align: center;  background-color: #f5f5f5; border-radius: 20px;">
-                                                                                    <span style="line-height: 30px;font-size: 10px;font-weight: 700;color: #cccccc;" >+ <%=CLNG(count_rsparticipantes("total")) - 2%></span>
-                                                                                </div>
-                                                                        <%
-                                                                            END IF
-
-                                                                            SET rsusuario = conexao.execute("SELECT u.usuario, u.logo, s.setor FROM usuarios u INNER JOIN setores s ON u.id_setor = s.idsetor INNER JOIN neg_prospecter_responsaveis pr ON pr.id_usuario = u.idusuario WHERE pr.id_negp = "&rsnegoc("idnp")&" AND u.status = 'Ativo' ")
-
-                                                                            IF NOT rsusuario.EOF THEN 
-
-                                                                                contador = 1
-                                                                                IF flag_part THEN
-                                                                                    contador_aux = 2
-                                                                                ELSE
-                                                                                    contador_aux = 3
-                                                                                END IF
-
-                                                                                WHILE NOT rsusuario.EOF and contador <= contador_aux
-                                                                                    IF IsNull(rsusuario("logo")) OR rsusuario("logo") = "" THEN
-                                                                                        logo_usuario = "semfoto.png"
-                                                                                    ELSE 
-                                                                                        logo_usuario = rsusuario("logo")
-                                                                                    END IF
-                                                                        %>
-                                                                                    <a class="tooltip-demo" href="usuarios.asp" style="width: 30px; height: 30px; position: relative; display: block; float: right; margin-right: 8px;">
-                                                                                        <img style="width: 100%; height: 100%;"  data-toggle="tooltip" data-placement="bottom" title="<%=rsusuario("usuario")%> (<%=rsusuario("setor")%>)" alt="image" class="img-circle" src="../imagens/logo_usuario/<%=logo_usuario%>">
-                                                                                    </a>
-                                                                        <%
-                                                                                    contador = contador + 1
-                                                                                    rsusuario.movenext
-                                                                                WEND
-                                                                            END IF
-                                                                        %>
-
-                                                                        <div style="display: flex;">
-                                                                            <%
-                                                                                SET rsdata_etapa = conexao.execute("SELECT CAST(data AS DATE) as data FROM neg_funil WHERE id_negp = "&rsnegoc("idnp")&" and id_etapa_funil = "&rsetapas("idnfe")& " ORDER BY idnf DESC")
-
-                                                                                IF NOT rsdata_etapa.EOF THEN
-                                                                            %>
-                                                                                    <div class="tooltip-demo">
-                                                                                        <span data-toggle="tooltip" data-placement="top" title="Entrada na etapa" style="margin: 0px 10px 0 0" class="label label-primary pull-left"><%=rsdata_etapa("data")%></span>
-                                                                                    </div> 
-                                                                            <%
-                                                                                END IF
-                                                                            
-                                                                                SET rs_last_historico = conexao.execute("SELECT data FROM neg_interacao WHERE id_negociacao = "&rsnegoc("idnp")&" ORDER BY idni DESC LIMIT 1")
-
-                                                                                IF NOT rs_last_historico.EOF THEN
-                                                                                    ultima_interacao = rs_last_historico("data")
-                                                                            %>
-
-                                                                                    <script>
-                                                                                        var data1 = moment('<%=now%>', "DD/MM/YYYY hh:mm:ss");
-                                                                                        var data2 = moment('<%=ultima_interacao%>', "DD/MM/YYYY hh:mm:ss");
-                                                                                        var resultado<%=i%> = data1.diff(data2, 'days');
-
-                                                                                        $(document).ready(function () {
-                                                                                            document.getElementById('val<%=i%>').innerHTML = resultado<%=i%> + " dias";
-                                                                                        });
-                                                                                    </script>
-
-                                                                                    <div class="tooltip-demo">
-                                                                                        <span style="margin: 0px 20px 0 0" class="label label-danger pull-left" id="val<%=i%>" data-toggle="tooltip" data-placement="top" title="Última interação."></span>
-                                                                                    </div> 
-                                                                            <%
-                                                                                ELSE 
-                                                                            %>
-                                                                                    <span style="margin: 0px 20px 0 0" class="label label-primary pull-left" id="val<%=i%>">N/A</span>
-                                                                            <%
-                                                                                END IF 
-                                                                            %>
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                    <%
-                                                                        n_empresa = pontinhos(rsnegoc("empresa"), 25)
-                                                                    %>
-
-                                                                    <strong><%=n_empresa%></strong> 
-
-                                                                    <%
-                                                                        resp = pontinhos(rsnegoc("responsavel"), 35)
-                                                                    %>
-
-                                                                    <p style="margin-bottom: 0px;"><small style="color: var(--cor-principal); "><%=resp%></small></p>
-
-                                                                    <p style="margin-bottom: 3px;">(<%=rsnegoc("cidade")%> - <%=rsnegoc("uf")%>)</p> 
-
-                                                                    <%
-
-                                                                        SET rsagenda = conexao.execute("SELECT agenda_data, agenda_hora FROM neg_interacao WHERE tipo = 'Reunião' and id_negociacao = "&rsnegoc("idnp")&" and status = 'Aberto'")
-
-                                                                        IF NOT rsagenda.EOF THEN 
-                                                                    %>
-                                                                            <div class="tooltip-demo" style=";clear: both;">
-                                                                                <i data-toggle="tooltip" data-placement="top" title="Agendado: <%=rsagenda("agenda_data")%> " class="fa fa-calendar" style="color: var(--cor-secundaria) !important"></i>
-                                                                            </div> 
-                                                                    <%
-                                                                        ELSE    
-                                                                    %>
-                                                                            <div class="tooltip-demo" style=";clear: both; height: 12px; width: 12px;">
-                                                                               
-                                                                            </div>
-
-                                                                    <%  END IF  %>
-
-                                                                    <%    
-                                                                        IF NOT IsNull(rsnegoc("data_validacao")) THEN 
-                                                                    %>
-                                                                            <div class="tooltip-demo" style="height: 10px; clear: both;">
-                                                                                <i data-toggle="tooltip" data-placement="top" title="Aprovado" class="fa fa-check-circle" ></i>
-                                                                            </div> 
-                                                                    <%
-                                                                        
-                                                                        END IF                                                                 
-                              
-                                                                    %>
-
-                                                                    <%
-                                                                        SET rsdata_entrada = conexao.execute("SELECT CAST(data AS DATE) as data FROM neg_funil WHERE id_negp = "&rsnegoc("idnp")&" and id_etapa_funil = "&rsid_entrada("idnfe"))
-
-                                                                        IF NOT rsdata_entrada.EOF THEN
-                                                                    %>
-                                                                            <div>
-                                                                                <p data-toggle="tooltip" data-placement="top" title="Data de cadastro" style="margin-top: -17px; text-align: right;"><small><i style="margin-right: 1%" class="fas fa-pennant" aria-hidden="true"></i><%=rsdata_entrada("data")%></small></p>
-                                                                            </div> 
-                                                                    <%
-                                                                        END IF
-                                                                    %>
-
-                                                                    
-                                                                </div>
-
-                                                        </li>
-                                                          
                                                 <%
-                                                            i = i + 1
-                                                            rsnegoc.movenext
-                                                        WEND
+                                                    etapas = pontinhos(rsetapas("etapa"), 25) 
+                                                %>
+                                                
+                                                <h3 style="margin-left: 3%; font-size: 17px; margin-bottom: 0;"><strong><%=etapas%></strong></h3> 
+
+                                                <span style="margin-left: 3%; " id="count<%=rsetapas("idnfe")%>"><%=rstotal("total")%></span>&nbsp; contatos
+
+                                                <label class="label label-success" style="background-color: #5cb85c; margin-top: 1%; margin-right: 3%; float: right; ">R$ <span id="count-adesao<%=rsetapas("idnfe")%>"><%=totaladesao%></span></label>
+
+                                                <span style="position: absolute;right: 13%;top: 7%;cursor: pointer;">
                                                     
-                                                        IF Cint(rstotal("total")) > 2 THEN 
+                                                </span>
+                                                <div style="clear:both"></div>
+                                            
+                                                <%        
+                                                    if rsetapas("conversao") = "Sim" or rsetapas("nao_conversao") = "Sim"  then    
+                                                        SET rsnegoc = conexao.execute("SELECT DISTINCT np.idnp, np.empresa, np.responsavel, np.cidade, np.uf, data_validacao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" and np.situacao = "&rsetapas("idnfe")&" and "&usuario&" and "&perfil&" and "&aquisicao&" and "&produto&" AND np.del = 0 and month(data) = "&month(date)&" and year(data) = "&year(date)&" ORDER BY nf.idnf DESC limit 10")
+                                                    ELSE
+                                                        SET rsnegoc = conexao.execute("SELECT DISTINCT np.idnp, np.empresa, np.responsavel, np.cidade, np.uf, data_validacao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp WHERE "&visualizar_tipo&" AND np.del = 0 and np.situacao = "&rsetapas("idnfe")&" and "&usuario&" and "&perfil&" and "&aquisicao&" and "&produto&" ORDER BY nf.idnf DESC limit 10")
+                                                    end if
+
+                                                    SET rsid_entrada = conexao.execute("SELECT idnfe FROM neg_funil_etapas WHERE entrada = 'Sim'")
+
+
                                                 %>
-                                                            <div class="col-lg-12" style="text-align: center;padding: 2%">
-                                                                <a onClick="neg_plus(<%=rsetapas("idnfe")%>, '<%=rsetapas("conversao")%>', '<%=rsetapas("nao_conversao")%>', '', '')" target="_blank">
-                                                                    <div class="vertical-timeline-icon navy-bg" style="position: initial;margin: auto;cursor: pointer;">
-                                                                        <i class="fa fa-plus" aria-hidden="true"></i>
-                                                                    </div>
-                                                                </a>
-                                                            </div>
-                                                <%      
-                                                        END IF 
-                                                    END IF
-                                                %>
-                                            </ul>
+
+                                                <div class="barra" style="height: 500px; overflow: auto;overflow-x:hidden;">
+                                                    <style type="text/css">
+
+                                                        .info-element:hover .icones {
+                                                            display: block !important;
+                                                        }
+                                                        
+                                                    </style>
+                                                    <div id="retorno_neg<%=rsetapas("idnfe")%>">
+
+                                                        <ul class="lista_neg sortable-list connectList agile-list" id="etapa<%=rsetapas("idnfe")%>">
+
+                                                            <%
+                                                                IF NOT rsnegoc.EOF THEN 
+                                                                    WHILE NOT rsnegoc.EOF 
+                                                                        habilita_acao = false
+                                                                        IF Request.Cookies("grpro")("perm_103") = "1" THEN 
+                                                                            habilita_acao = true
+                                                                        ELSE
+
+                                                                            SET verifica_participacao = conexao.execute("SELECT idprospecter FROM neg_prospecter_responsaveis where id_negp = "&rsnegoc("idnp")&" and id_usuario = "&Request.cookies("grpro")("idusuario")&" limit 1")
+                                                                            IF NOT verifica_participacao.EOF THEN habilita_acao = true
+
+                                                                        END IF
+
+                                                                        SET lembrete = conexao.execute("SELECT * FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE ni.id_negociacao = "&rsnegoc("idnp")&" and hour(ni.agenda_hora) < 24 AND ni.status = 'Aberto' AND ni.del = 0 AND ni.tipo = 'Lembrete' ORDER BY ni.idni DESC")
+
+                                                                        IF NOT lembrete.EOF THEN
+                                                                            lembrete_classe = "lembrete-sim"
+                                                                        ELSE
+                                                                            lembrete_classe = "lembrete-nao"
+                                                                        END IF 
+                                                            %>
+                                                                
+                                                                        <li class="info-element <%=lembrete_classe%>" id="<%IF NOT habilita_acao THEN response.write("nao-")%><%=rsnegoc("idnp")%>" style="position: relative; padding: 3%; padding-bottom: 0px !important">  
+                                            
+                                                                            <%IF habilita_acao THEN%>
+                                                                                <div class="icones" style="text-align: center; position: absolute;  width: 100%; padding: 10px;display: block;bottom: 0px;z-index: -1; background-color: rgba(255, 255, 255, 0.7);">
+
+                                                                                    <div style="width: 100%; margin-left: auto;text-align: right; display: flex;">
+                                                                                        <i title="Adicionar Anotação" data-toggle="tooltip" data-placement="top" onclick="adicionar_anotacao(<%=rsnegoc("idnp")%>,'<%=rsnegoc("empresa")%> - <%=rsnegoc("responsavel")%>')" class="fas fa-folder-plus" style="font-size: 15px;color: #003366;cursor: pointer;margin-right: 3%;margin-left: auto !important;"></i><br>
+
+                                                                                        <i title="Adicionar Agendamento" data-toggle="tooltip" data-placement="top" onclick="adicionar_agendamento(<%=rsnegoc("idnp")%>,'<%=rsnegoc("empresa")%> - <%=rsnegoc("responsavel")%>')" class="fas fa-calendar" style="font-size: 15px;color: #003366;cursor: pointer;margin-right: 3%"></i><br>
+
+                                                                                        <i style="font-size: 15px; margin-right: 10px; color: #003366;cursor: pointer;" onclick="excluir(<%=rsnegoc("idnp")%>)" class="fa fa-trash pull-right" data-placement="top" title="Excluir" aria-hidden="true"></i><br><span class="sr-only"></span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            <%END IF%>
+
+                                                                            <div <%IF habilita_acao THEN%>onclick="window.open('neg_interacao_novo.asp?id=<%=rsnegoc("idnp")%>', '_blank') "<%END IF%>>
+                                                                                <div style="height: 22px">
+
+                                                                                    <%
+                                                                                        SET count_rsparticipantes = conexao.execute("SELECT COUNT(pr.idprospecter) as total FROM usuarios u  INNER JOIN neg_prospecter_responsaveis pr ON pr.id_usuario = u.idusuario WHERE pr.id_negp = "&rsnegoc("idnp")&" AND u.status = 'Ativo' ")
+                                                                                        flag_part = false
+                                                                                        IF CLNG(count_rsparticipantes("total")) > 3 THEN 
+                                                                                            flag_part = true
+                                                                                    %>
+
+                                                                                            <div title="Demais responsáveis" class="tooltip-demo" style="width: 30px; height: 30px; position: relative; display: block; float: right; margin-right: 8px; text-align: center;  background-color: #f5f5f5; border-radius: 20px;">
+                                                                                                <span style="line-height: 30px;font-size: 10px;font-weight: 700;color: #cccccc;" >+ <%=CLNG(count_rsparticipantes("total")) - 2%></span>
+                                                                                            </div>
+                                                                                    <%
+                                                                                        END IF
+
+                                                                                        SET rsusuario = conexao.execute("SELECT u.usuario, u.logo, s.setor FROM usuarios u INNER JOIN setores s ON u.id_setor = s.idsetor INNER JOIN neg_prospecter_responsaveis pr ON pr.id_usuario = u.idusuario WHERE pr.id_negp = "&rsnegoc("idnp")&" AND u.status = 'Ativo' ")
+
+                                                                                        IF NOT rsusuario.EOF THEN 
+
+                                                                                            contador = 1
+                                                                                            IF flag_part THEN
+                                                                                                contador_aux = 2
+                                                                                            ELSE
+                                                                                                contador_aux = 3
+                                                                                            END IF
+
+                                                                                            WHILE NOT rsusuario.EOF and contador <= contador_aux
+                                                                                                IF IsNull(rsusuario("logo")) OR rsusuario("logo") = "" THEN
+                                                                                                    logo_usuario = "semfoto.png"
+                                                                                                ELSE 
+                                                                                                    logo_usuario = rsusuario("logo")
+                                                                                                END IF
+                                                                                    %>
+                                                                                                <a class="tooltip-demo" href="usuarios.asp" style="width: 30px; height: 30px; position: relative; display: block; float: right; margin-right: 8px;">
+                                                                                                    <img style="width: 100%; height: 100%;"  data-toggle="tooltip" data-placement="bottom" title="<%=rsusuario("usuario")%> (<%=rsusuario("setor")%>)" alt="image" class="img-circle" src="../imagens/logo_usuario/<%=logo_usuario%>">
+                                                                                                </a>
+                                                                                    <%
+                                                                                                contador = contador + 1
+                                                                                                rsusuario.movenext
+                                                                                            WEND
+                                                                                        END IF
+                                                                                    %>
+
+                                                                                    <div style="display: flex;">
+                                                                                        <%
+                                                                                            SET rsdata_etapa = conexao.execute("SELECT CAST(data AS DATE) as data FROM neg_funil WHERE id_negp = "&rsnegoc("idnp")&" and id_etapa_funil = "&rsetapas("idnfe")& " ORDER BY idnf DESC")
+
+                                                                                            IF NOT rsdata_etapa.EOF THEN
+                                                                                        %>
+                                                                                                <div class="tooltip-demo">
+                                                                                                    <span data-toggle="tooltip" data-placement="top" title="Entrada na etapa" style="margin: 0px 10px 0 0" class="label label-primary pull-left"><%=rsdata_etapa("data")%></span>
+                                                                                                </div> 
+                                                                                        <%
+                                                                                            END IF
+                                                                                        
+                                                                                            SET rs_last_historico = conexao.execute("SELECT data FROM neg_interacao WHERE id_negociacao = "&rsnegoc("idnp")&" ORDER BY idni DESC LIMIT 1")
+
+                                                                                            IF NOT rs_last_historico.EOF THEN
+                                                                                                ultima_interacao = rs_last_historico("data")
+                                                                                        %>
+
+                                                                                                <script>
+                                                                                                    var data1 = moment('<%=now%>', "DD/MM/YYYY hh:mm:ss");
+                                                                                                    var data2 = moment('<%=ultima_interacao%>', "DD/MM/YYYY hh:mm:ss");
+                                                                                                    var resultado<%=i%> = data1.diff(data2, 'days');
+
+                                                                                                    $(document).ready(function () {
+                                                                                                        document.getElementById('val<%=i%>').innerHTML = resultado<%=i%> + " dias";
+                                                                                                    });
+                                                                                                </script>
+
+                                                                                                <div class="tooltip-demo">
+                                                                                                    <span style="margin: 0px 20px 0 0" class="label label-danger pull-left" id="val<%=i%>" data-toggle="tooltip" data-placement="top" title="Última interação."></span>
+                                                                                                </div> 
+                                                                                        <%
+                                                                                            ELSE 
+                                                                                        %>
+                                                                                                <span style="margin: 0px 20px 0 0" class="label label-primary pull-left" id="val<%=i%>">N/A</span>
+                                                                                        <%
+                                                                                            END IF 
+                                                                                        %>
+
+                                                                                        <%
+                                                                                            IF NOT lembrete.EOF THEN
+                                                                                        %>
+                                                                                                <div class="col-lg-1" style="margin-top: 0%;">
+                                                                                                    <button class="label label-info" title="<%=lembrete("descricao")%>" style="border: none; cursor: pointer; float: right; background-color: #f8ac59"><i class="fa fa-bell"></i></button>
+                                                                                                </div>
+                                                                                        <%
+                                                                                            END IF 
+                                                                                        %>
+                                                                                    </div>
+
+                                                                                </div>
+
+                                                                                <%
+                                                                                    n_empresa = pontinhos(rsnegoc("empresa"), 25)
+                                                                                %>
+
+                                                                                <strong><%=n_empresa%></strong> 
+
+                                                                                <%
+                                                                                    resp = pontinhos(rsnegoc("responsavel"), 35)
+                                                                                %>
+
+                                                                                <p style="margin-bottom: 0px;"><small style="color: var(--cor-principal); "><%=resp%></small></p>
+
+                                                                                <p style="margin-bottom: 3px;">(<%=rsnegoc("cidade")%> - <%=rsnegoc("uf")%>)</p> 
+
+                                                                                <div style="display: flex;">
+                                                                                    <%
+
+                                                                                        SET rsagenda = conexao.execute("SELECT agenda_data, agenda_hora FROM neg_interacao WHERE tipo = 'Reunião' and id_negociacao = "&rsnegoc("idnp")&" and status = 'Aberto'")
+
+                                                                                        IF NOT rsagenda.EOF THEN 
+                                                                                    %>
+                                                                                            <div class="tooltip-demo" style="clear: both; margin-left: 5px;">
+                                                                                                <i data-toggle="tooltip" data-placement="top" title="Agendado: <%=rsagenda("agenda_data")%> " class="fa fa-calendar" style="color: var(--cor-secundaria) !important"></i>
+                                                                                            </div> 
+                                                                                    <%
+                                                                                        ELSE    
+                                                                                    %>
+                                                                                            <div class="tooltip-demo" style="clear: both; height: 12px; width: 12px;">
+                                                                                               
+                                                                                            </div>
+
+                                                                                    <%  END IF  %>
+
+                                                                                    <%    
+                                                                                        IF NOT IsNull(rsnegoc("data_validacao")) THEN 
+                                                                                    %>
+                                                                                            <div class="tooltip-demo" style="height: 10px; clear: both; margin-left: 5px;">
+                                                                                                <i data-toggle="tooltip" data-placement="top" title="Aprovado" class="fa fa-check-circle"></i>
+                                                                                            </div> 
+                                                                                    <%
+                                                                                        END IF                                                                 
+                                                                                    %>
+                                                                                </div>
+
+                                                                                <%
+                                                                                    SET rsdata_entrada = conexao.execute("SELECT CAST(data AS DATE) as data FROM neg_funil WHERE id_negp = "&rsnegoc("idnp")&" and id_etapa_funil = "&rsid_entrada("idnfe"))
+
+                                                                                    IF NOT rsdata_entrada.EOF THEN
+                                                                                %>
+                                                                                        <div>
+                                                                                            <p data-toggle="tooltip" data-placement="top" title="Data de cadastro" style="margin-top: -17px; text-align: right;"><small><i style="margin-right: 1%" class="fas fa-pennant" aria-hidden="true"></i><%=rsdata_entrada("data")%></small></p>
+                                                                                        </div> 
+                                                                                <%
+                                                                                    END IF
+                                                                                %>
+                                                                            </div>
+                                                                    </li>
+                                                                      
+                                                            <%
+                                                                        i = i + 1
+                                                                        rsnegoc.movenext
+                                                                    WEND
+                                                                
+                                                                    IF Cint(rstotal("total")) > 2 THEN 
+                                                            %>
+                                                                        <div class="col-lg-12" style="text-align: center;padding: 2%">
+                                                                            <a onClick="neg_plus(<%=rsetapas("idnfe")%>, '<%=rsetapas("conversao")%>', '<%=rsetapas("nao_conversao")%>', '', '')" target="_blank">
+                                                                                <div class="vertical-timeline-icon navy-bg" style="position: initial;margin: auto;cursor: pointer;">
+                                                                                    <i class="fa fa-plus" aria-hidden="true"></i>
+                                                                                </div>
+                                                                            </a>
+                                                                        </div>
+                                                            <%      
+                                                                    END IF 
+                                                                END IF
+                                                            %>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                            </div>
                                         </div>
                                     </div>
 
-                                </div>
-                            </div>
-                        </div>
-
                         <%
-                            i = i + 1
-                            contador = contador + 1 
-                            rsetapas.movenext 
+                                    i = i + 1
+                                    contador = contador + 1 
+                                    rsetapas.movenext 
                                 WEND
                             ELSE 
                         %>
-                            <p>Não há etapas.</p>
+                                <p>Não há etapas.</p>
                         <%
                             END IF 
 
@@ -1005,7 +1052,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 toastr.options.progressBar = true;
                 toastr.options.timeOut = 8000;
                 toastr.options.extendedTimeOut = 6000;
-                toastr.success("Negociação inserida com sucesso!")
+                toastr.success("<%=Application("nome_negociacoes")%> inserida com sucesso!")
             })
         </script>
     <%end if%>
@@ -1017,7 +1064,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 toastr.options.progressBar = true;
                 toastr.options.timeOut = 8000;
                 toastr.options.extendedTimeOut = 6000;
-                toastr.success("Negociação excluida com sucesso!")
+                toastr.success("<%=Application("nome_negociacoes")%> excluida com sucesso!")
             })
         </script>
     <%end if%>
@@ -1211,7 +1258,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 toastr.options.progressBar = true;
                 toastr.options.timeOut = 8000;
                 toastr.options.extendedTimeOut = 6000;
-                toastr.success("Negociação excluida com sucesso!")
+                toastr.success("<%=Application("nome_negociacoes")%> excluida com sucesso!")
 
                 // pesquisa_negociacao(pesquisa, opcao);
             }
