@@ -109,11 +109,11 @@ Set conexao = Server.CreateObject("ADODB.Connection")
         dat3 = year(dat3)&"-"&mes
 
         IF (rsetapas("conversao") = "Sim" OR rsetapas("nao_conversao") = "Sim") AND opcao <> "nome" THEN
-            SET rstotal = conexao.execute("SELECT count(DISTINCT np.idnp) as total FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp  WHERE "&visualizar_tipo&" AND np.del = 0 and np.situacao = "&rsetapas("idnfe")&"  and "&aquisicao&" and month(nf.data) = "&month(date)&" and year(nf.data) = "&year(date)&" "&pesquisa_sql&" ORDER BY nf.idnf DESC LIMIT 10")
+            SET rstotal = conexao.execute("SELECT count(DISTINCT np.idnp) as total FROM neg_prospecter np INNER JOIN neg_prospecter_responsaveis pr ON pr.id_negp = np.idnp INNER JOIN neg_funil nf ON np.idnp = nf.id_negp  WHERE "&visualizar_tipo&" AND np.del = 0 and np.situacao = "&rsetapas("idnfe")&"  and "&aquisicao&" and month(nf.data) = "&month(date)&" and year(nf.data) = "&year(date)&" "&pesquisa_sql&" ORDER BY nf.idnf DESC LIMIT 10")
 
             SET rstotaladesao = conexao.execute("SELECT SUM(DISTINCT valor_adesao) as totaladesao FROM neg_prospecter np INNER JOIN neg_funil nf ON np.idnp = nf.id_negp INNER JOIN usuarios u ON u.idusuario = nf.id_usuario WHERE "&visualizar_tipo&" AND np.del = 0 and np.situacao = "&rsetapas("idnfe")&" and "&aquisicao&" and month(nf.data) = "&month(date)&" and year(nf.data) = "&year(date)&" "&pesquisa_sql&" ORDER BY nf.idnf DESC")
         ELSE
-            SET rstotal = conexao.execute("SELECT Count(DISTINCT idnp) as total FROM neg_prospecter np INNER JOIN neg_prospecter_responsaveis npr ON npr.id_negp = np.idnp INNER JOIN usuarios u ON u.idusuario = npr.id_usuario WHERE "&visualizar_tipo&" and situacao = "&rsetapas("idnfe")&" AND np.del = 0  and "&aquisicao&" "&pesquisa_sql&" LIMIT 10")
+            SET rstotal = conexao.execute("SELECT Count(idnp) as total FROM neg_prospecter np INNER JOIN neg_prospecter_responsaveis npr ON npr.id_negp = np.idnp INNER JOIN usuarios u ON u.idusuario = npr.id_usuario WHERE "&visualizar_tipo&" and situacao = "&rsetapas("idnfe")&" AND np.del = 0  and "&aquisicao&" "&pesquisa_sql&" LIMIT 10")
 
             SET rstotaladesao = conexao.execute("SELECT SUM(valor_adesao) as totaladesao FROM neg_prospecter np INNER JOIN neg_prospecter_responsaveis npr ON npr.id_negp = np.idnp INNER JOIN usuarios u ON u.idusuario = npr.id_usuario WHERE "&visualizar_tipo&" and situacao = "&rsetapas("idnfe")&" AND np.del = 0 and "&aquisicao&" "&pesquisa_sql)
         END IF
@@ -169,7 +169,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 </style>
                 <div id="retorno_neg<%=rsetapas("idnfe")%>">
 
-                    <ul style="" class="sortable-list connectList agile-list" id="etapa<%=rsetapas("idnfe")%>">
+                    <ul class="lista_neg sortable-list connectList agile-list" id="etapa<%=rsetapas("idnfe")%>">
 
                         <%
                             IF NOT rsnegoc.EOF THEN 
@@ -186,9 +186,17 @@ Set conexao = Server.CreateObject("ADODB.Connection")
 
                                     END IF
 
+                                    SET lembrete = conexao.execute("SELECT * FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE ni.id_negociacao = "&rsnegoc("idnp")&" and hour(ni.agenda_hora) < 24 AND ni.status = 'Aberto' AND ni.del = 0 AND ni.tipo = 'Lembrete' ORDER BY ni.idni DESC")
+
+                                    IF NOT lembrete.EOF THEN
+                                        lembrete_classe = "lembrete-sim"
+                                    ELSE
+                                        lembrete_classe = "lembrete-nao"
+                                    END IF 
+
                         %>
                             
-                                    <li class="info-element" id="<%IF NOT habilita_acao THEN response.write("nao-")%><%=rsnegoc("idnp")%>" style="position: relative; padding: 3%; padding-bottom: 0px !important;">  
+                                    <li class="info-element <%=lembrete_classe%>" id="<%IF NOT habilita_acao THEN response.write("nao-")%><%=rsnegoc("idnp")%>" style="position: relative; padding: 3%; padding-bottom: 0px !important;">  
                                 
                                             <%IF habilita_acao THEN%>
                                                 <div class="icones" style="text-align: center; position: absolute;  width: 100%; padding: 10px;display: block;bottom: 0px;z-index: -1; background-color: rgba(255, 255, 255, 0.7);">
@@ -282,6 +290,16 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                                             ELSE 
                                                         %>
                                                                 <span style="margin: 0px 20px 0 0" class="label label-primary pull-left" id="val<%=i%>">N/A</span>
+                                                        <%
+                                                            END IF 
+                                                        %>
+
+                                                        <%
+                                                            IF NOT lembrete.EOF THEN
+                                                        %>
+                                                                <div class="col-lg-1" style="margin-top: 0%;">
+                                                                    <button class="label label-info" title="Lembrete" style="border: none; cursor: pointer; float: right; background-color: #f8ac59"><i class="fa fa-bell"></i></button>
+                                                                </div>
                                                         <%
                                                             END IF 
                                                         %>
