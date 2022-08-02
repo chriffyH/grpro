@@ -351,15 +351,17 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 descricao = Replace(Request.Form("descricao"), VbCrLf, "<br>")
                 descricao = Replace(descricao, "'", "")
 
+                tipo_reuniao = request.Form("tipo_reuniao")
+
                 SET rsnome_responsavel = conexao.execute("SELECT npr.id_usuario, np.empresa, np.responsavel FROM neg_prospecter_responsaveis npr INNER JOIN neg_prospecter np ON np.idnp = npr.id_negp WHERE id_negp = "&id_neg)
 
                 datas = agenda_data & " " & agenda_hora
 
                 WHILE NOT rsnome_responsavel.EOF
 
-                    conexao.execute("INSERT INTO neg_interacao (id_negociacao, id_usuario, descricao, agenda_data, agenda_hora, tipo) VALUES ("&id_neg&", "&rsnome_responsavel("id_usuario")&", '"&descricao&"', '"&agenda_data&"', '"&agenda_hora&"', 'Reunião')")
+                    conexao.execute("INSERT INTO neg_interacao (id_negociacao, id_usuario, descricao, agenda_data, agenda_hora, tipo) VALUES ("&id_neg&", "&rsnome_responsavel("id_usuario")&", '"&descricao&"', '"&agenda_data&"', '"&agenda_hora&"', '"&tipo_reuniao&"')")
 
-                    conexao.execute("INSERT INTO agenda_compromissos (id_usuario, id_setor, id_np, titulo, descricao, data_inicio, data_termino, tipo) VALUES ( "&rsnome_responsavel("id_usuario")&", "&Request.Cookies("grpro")("setor")&", "&id_neg&", 'Reunião com "&rsnome_responsavel("empresa")&" - "&rsnome_responsavel("responsavel")&"', '"&descricao&"', '"&datas&"', '"&datas&"', 'Pessoal')")
+                    conexao.execute("INSERT INTO agenda_compromissos (id_usuario, id_setor, id_np, titulo, descricao, data_inicio, data_termino, tipo) VALUES ( "&rsnome_responsavel("id_usuario")&", "&Request.Cookies("grpro")("setor")&", "&id_neg&", '"&tipo_reuniao&" com "&rsnome_responsavel("empresa")&" - "&rsnome_responsavel("responsavel")&"', '"&descricao&"', '"&datas&"', '"&datas&"', 'Pessoal')")
 
                     rsnome_responsavel.movenext
                 WEND
@@ -967,27 +969,30 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                                         <div class="form-group">
                                                             
                                                             <h4><i class="fal fa-users-class" style="color: #23c6c8"></i> <strong>Reuniões</strong></h4>
-                                                            <div style="height: auto; overflow: auto;">
+                                                            <div style="height: auto; overflow: auto; display: flex;">
 
                                                                 <%
                                                                     SET historico_count = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 and tipo = 'Reunião' and ni.status = 'Aberto' ORDER BY idni DESC")
                                                                 %>
-                                                                <p>Agendadas <span class="label label-info" style="background-color: #676a6c"><%=historico_count("total")%></span></p>
+
+                                                                <p style="padding-right: 10px">Agendadas <span class="label label-info" style="background-color: #676a6c"><%=historico_count("total")%></span></p>
 
                                                                 <%
                                                                     SET historico_count = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 and tipo = 'Reunião' and ni.status = 'Concluida' ORDER BY idni DESC")
                                                                 %>
-                                                                <p>Concluidas <span class="label label-info"><%=historico_count("total")%></span></p>
+
+                                                                <p style="padding-right: 10px">Concluidas <span class="label label-info"><%=historico_count("total")%></span></p>
 
                                                                 <%
                                                                     SET historico_count = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 and tipo = 'Reunião' and ni.status = 'Cancelada' ORDER BY idni DESC")
                                                                 %>
+
                                                                 <p>Canceladas <span style="background-color: #ed5565" class="label label-info"><%=historico_count("total")%></span></p>
 
                                                             </div>
 
                                                          
-                                                            <div  class="btn btn-warning" data-toggle="modal" data-target="#modagenda">Criar uma reunião</div>
+                                                            <div style="padding: 4px;" class="btn btn-warning" data-toggle="modal" data-target="#modagenda">Criar uma reunião</div>
                                                           
 
                                                         </div>
@@ -1396,22 +1401,25 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                 </a></li>
 
                                 <%
-                                    SET historico_count = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 AND ni.del = 0 AND tipo = 'Reunião' ORDER BY idni DESC")
+                                    SET historico_reuniao = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 AND ni.del = 0 AND tipo = 'Reunião' ORDER BY idni DESC")
+
+                                    SET historico_lembrete = conexao.execute("SELECT COUNT(ni.idni) as total FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 AND ni.del = 0 AND tipo = 'Lembrete' ORDER BY idni DESC ")
                                 %>
 
-                                <li class=""><a class="nav-link" data-toggle="tab" href="#tabreuni">Reuniões 
-                                    <span class="label label-info" style="background-color: #f8ac59"><%=historico_count("total")%></span>
-                                </a></li>
+                                <li>
+                                    <a class="nav-link" data-toggle="tab" href="#tabreuni">Reuniões / Lembretes
+                                        <!-- <span class="label label-info" style="background-color: #013366"><=historico_reuniao("total")%></span>
+                                        <span class="label label-info" style="background-color: #f8ac59"><=historico_lembrete("total")%></span> -->
+                                    </a>
+                                </li>
 
                                 <li class=""><a class="nav-link" data-toggle="tab" href="#tabarq">Arquivos</a></li>
                                 
 
                                 <%
                                     IF rsemp("id_perfil") <> "" and rsemp("id_perfil") <> "0" then
-
                                         SET rsquestionarios = conexao.execute("SELECT * FROM neg_quest_perfil as p INNER JOIN neg_questionarios as q ON p.id_questionario = q.idnq WHERE q.status = 'Ativo'  and  id_perfil = "&rsemp("id_perfil")&" order by q.ordem asc")
                                     else
-
                                         SET rsquestionarios = conexao.execute("SELECT idnq, titulo FROM neg_questionarios WHERE status = 'Ativo' ORDER BY ordem ASC")
                                     end if
 
@@ -1420,9 +1428,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                         <li class=""><a class="nav-link" data-toggle="tab" href="#tabquest">Questionário</a></li>
                                 <%
                                     END IF
-                                %>
-
-                                <%
+                                
                                     SET metricas = conexao.execute("SELECT * FROM neg_prospecter_metrica where id_negp = "&request.querystring("id"))
                                     IF NOT metricas.EOF THEN
                                 %>
@@ -1557,10 +1563,6 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                                                     <span style="cursor: pointer;margin-left: 1%;" onclick="deleta_historico(<%=idhistorico%>)"  class="label label-danger float-right">Deletar <i class="fa fa-trash" data-placement="top"  aria-hidden="true"></i> </span>
                                                                 </div>
 
-                                                                
-
-                                                                
-
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1587,7 +1589,7 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                                         </div>
 
                                         <%
-                                            SET rshistorico = conexao.execute("SELECT nit.nome, ni.idni, ni.descricao, ni.agenda_data, ni.agenda_hora, ni.data, ni.status, ni.tipo, u.usuario, u.logo, ni.id_tipo FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 AND ni.del = 0 AND tipo = 'Reunião' ORDER BY idni DESC")
+                                            SET rshistorico = conexao.execute("SELECT nit.nome, ni.idni, ni.descricao, ni.agenda_data, ni.agenda_hora, ni.data, ni.status, ni.tipo, u.usuario, u.logo, ni.id_tipo FROM neg_interacao ni INNER JOIN usuarios u ON ni.id_usuario = u.idusuario INNER JOIN neg_interacao_tipo nit ON nit.id = ni.id_tipo WHERE id_negociacao = "&id_neg&" and hour(agenda_hora) < 24 AND ni.del = 0 AND (ni.tipo = 'Reunião' OR ni.tipo = 'Lembrete') ORDER BY ni.idni DESC")
 
                                             IF NOT rshistorico.EOF THEN 
                                                 WHILE NOT rshistorico.EOF
@@ -1669,7 +1671,17 @@ Set conexao = Server.CreateObject("ADODB.Connection")
 
                                                                     <!-- icone para editar e excluir historico -->
 
-                                                                    <label class="label label-primary pull-left" style="margin-right: 8px;">Reunião</label>
+                                                                    <%
+                                                                        IF rshistorico("tipo") = "Reunião" THEN
+                                                                            rstipo = "Reunião"
+                                                                            cor = "#013366"
+                                                                        ELSE
+                                                                            rstipo = "Lembrete"
+                                                                            cor = "#f8ac59"
+                                                                        END IF
+                                                                    %>
+
+                                                                    <label class="label label-primary pull-left" style="margin-right: 8px; background-color: <%=cor%>; "><%=rstipo%></label>
 
                                                                     <label class="label label-primary pull-left" style="margin-right: 8px;background-color: <%=cor_reuniao%>"><%=rshistorico("status")%></label>
                                                                     
@@ -2281,12 +2293,19 @@ Set conexao = Server.CreateObject("ADODB.Connection")
                 </div>
                 <div class="modal-body">
                     <form ACTION="<%=MM_editAction%>" METHOD="POST">
+                    
+                        <div class="col-lg-12 form-control" style="border: none !important; display: flex; padding: 0px;margin-bottom: 0px">
+                            <div class="col-lg-3" style="padding-left: 0;">
+                                <input name="tipo_reuniao" style="float: left;margin-right: 3%" type="radio" value="Reunião" checked> Reunião
+                            </div>
+                            <div class="col-lg-3" style="padding-left: 0;">
+                                <input name="tipo_reuniao" style="float: left;margin-right: 3%" type="radio" value="Lembrete"> Lembrete 
+                            </div>
+                        </div>
+            
                         <label>Descrição:</label>
                         <textarea class="form-control" style="height: 100px" name="descricao" required></textarea>
-
-                   
-                        <div >
-                                
+                        <div> 
                             <div style="display: flex;">
                                 <div class="col-md-6" style="padding-left: 0px;float: initial;">
                                     <div class="form-group" id="data_agenda">
